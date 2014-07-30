@@ -1,0 +1,33 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.prime.com.tr/ui" template="/templates/ui.xhtml">
+
+	<ui:define name="content">
+
+		<h:form prependId="false">
+			<p:panel id="loginPanel" header="Haypi login" toggleable="true" collapsed="false">
+				<p:messages />
+				<h:panelGrid columns="2">
+					<h:outputLabel for="j_username">User Name:</h:outputLabel>
+					<p:inputText id="j_username" required="true" value="#{loginBean.username}" size="40">
+						<f:validateLength minimum="2" />
+					</p:inputText>
+
+					<h:outputLabel for="j_password">Password:</h:outputLabel>
+					<p:password id="j_password" value="#{loginBean.password}" required="true" feedback="false" size="40" />
+
+					<h:outputLabel for="j_deviceId">Device Id:</h:outputLabel>
+					<p:inputText id="j_deviceId" value="#{loginBean.deviceId}" maxlength="40" size="40" />
+
+					<h:outputLabel for="j_pvp">PVP:</h:outputLabel>
+					<h:selectBooleanCheckbox id="j_pvp" value="#{loginBean.pvp}" />
+				</h:panelGrid>
+				<p:commandButton value="Login" ajax="false" actionListener="#{loginBean.login}" />
+				<p:button value="Back" outcome="pages/home.xhtml" />
+				<br/>
+				<h:outputText value="#{basicBean.springSecurityLastException}" />
+			</p:panel>
+			<p:messages id="msgs" showDetail="true" />
+		</h:form>
+#{request.getHeader('user-agent')}
+	</ui:define>
+</ui:composition>

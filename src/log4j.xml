@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+ 
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!--
+		WARNING: %M(%L) Generating caller location information is extremely slow 
+		and should be avoided unless execution speed is not an issue.
+	-->
+
+	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %p [%t] %C.%M(%L) | %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="FILE" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="${catalina.home}/logs/haypi.log" />
+		<param name="immediateFlush" value="true" />
+		<param name="threshold" value="debug" />
+		<param name="append" value="true" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %p [%t] %C.%M(%L) | %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="ERRFILE" class="org.apache.log4j.RollingFileAppender">
+		<param name="file" value="${catalina.home}/logs/haypi_err.log" />
+		<param name="immediateFlush" value="true" />
+		<param name="threshold" value="error" />
+		<param name="append" value="true" />
+		<param name="maxBackupIndex" value="100" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %p [%t] %C.%M(%L) | %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="net.sf.ehcache">
+		<level value="ERROR" />
+	</logger>
+
+	<!--
+		Suppress success logging from InteractiveAuthenticationSuccessEvent
+	-->
+
+	<logger name="org.apache">
+		<level value="WARN" />
+	</logger>
+
+	<logger name="org.hibernate">
+		<level value="WARN" />
+	</logger>
+
+	<logger name="org.springframework">
+		<level value="WARN" />
+	</logger>
+
+	<logger name="org.springframework.security">
+		<level value="WARN" />
+	</logger>
+	
+	<logger name="org.springframework.security.web.FilterChainProxy">
+		<level value="WARN" />
+	</logger>
+	
+
+	<logger name="haypi">
+		<level value="DEBUG" />
+	</logger>
+
+	<logger name="haypi.comm">
+		<level value="INFO" />
+	</logger>
+
+
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+		<appender-ref ref="ERRFILE" />
+	</root>
+
+</log4j:configuration>

@@ -1,0 +1,192 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.prime.com.tr/ui" template="../templates/ui.xhtml">
+
+	<ui:define name="content">
+
+		<h1 class="title ui-widget-header ui-corner-all">
+			<h:panelGrid columns="2">
+				<h:outputText value="Hello #{homeBean.principal.username} #{request.userPrincipal.authorities}" class="ui-widget" />
+				<h:link outcome="/login.html" class="ui-widget" value="[Login]" rendered="#{!request.isUserInRole('ROLE_USER')}" />
+			</h:panelGrid>
+		</h1>
+
+		<h:form prependId="false">
+			<p:growl id="msgs" life="30000" />
+			<p:tabView dynamic="true" cache="false" widgetVar="tabView">
+				<p:tab title="Map">
+					<h:panelGrid columns="3">
+						<h:outputLabel for="inputx">X:</h:outputLabel>
+						<p:inputText id="inputx" value="#{homeBean.x}">
+							<f:convertNumber type="number" maxIntegerDigits="3" />
+						</p:inputText>
+						<p:message for="inputx" />
+
+						<h:outputLabel for="inputy">Y:</h:outputLabel>
+						<p:inputText id="inputy" value="#{homeBean.y}">
+							<f:convertNumber type="number" maxIntegerDigits="3" />
+						</p:inputText>
+						<p:message for="inputy" />
+
+						<h:outputLabel for="radius1">Radius:</h:outputLabel>
+						<p:inputText id="radius1" value="#{homeBean.radius}">
+							<f:convertNumber type="number" maxIntegerDigits="3" />
+						</p:inputText>
+						<p:message for="radius1" />
+					</h:panelGrid>
+					<h:panelGrid columns="5">
+						<p:commandButton value="Read from database" ajax="true" update="map" actionListener="#{homeBean.listSavedMap}" />
+						<p:commandButton value="Read from server" ajax="true" update="map" actionListener="#{homeBean.listMap}"
+							rendered="#{request.isUserInRole('ROLE_USER')}" />
+						<p:commandButton value="Save Current" ajax="true" actionListener="#{homeBean.saveCells}" rendered="false" />
+						<p:commandButton value="Write to database" ajax="true" actionListener="#{homeBean.storeMap}" onclick="pbAjax.start();"
+							rendered="#{request.isUserInRole('ROLE_USER')}" />
+						<p:commandButton value="Hide map" ajax="true" update="map" actionListener="#{homeBean.map.clear}" />
+					</h:panelGrid>
+
+					<p:progressBar widgetVar="pbAjax" ajax="true" interval="1000" value="#{homeBean.progress}" onCompleteUpdate="msgs" onCancelUpdate="msgs"
+						completeListener="#{homeBean.handleProgressComplete}" rendered="#{request.isUserInRole('ROLE_USER')}" />
+				</p:tab>
+
+				<p:tab title="Player">
+					<h:panelGrid columns="3">
+						<h:panelGroup>
+							<h:outputLabel styleClass="rightAlign" value="Player name: "/>
+							<p:autoComplete value="#{playerBean.selectedPlayer}" minQueryLength="2" queryDelay="500" completeMethod="#{playerBean.autocompletePlayer}"
+								var="player" itemLabel="#{player.name}" itemValue="#{player}" converter="playerConverter" />
+						</h:panelGroup>
+						<p:commandButton value="Player info" update="playerCells" />
+						<p:commandButton value="Scout" ajax="true" update="scoutResult" actionListener="#{homeBean.scoutPlayer}" onclick="tabView.select(3);pbAjax3.start();poller3.start()"
+							rendered="#{request.isUserInRole('ROLE_USER')}" />
+
+						<h:panelGroup>
+							<h:outputLabel class="ui-widget" for="fromPage" rendered="#{request.isUserInRole('ROLE_USER')}">From page: </h:outputLabel>
+							<p:inputText size="3" id="fromPage" value="#{playerBean.fromPage}" rendered="#{request.isUserInRole('ROLE_USER')}">
+								<f:convertNumber type="number" maxIntegerDigits="3" />
+							</p:inputText>
+							<h:outputLabel class="ui-widget" for="toPage" rendered="#{request.isUserInRole('ROLE_USER')}">To page: </h:outputLabel>
+							<p:inputText size="3" id="toPage" value="#{playerBean.toPage}" rendered="#{request.isUserInRole('ROLE_USER')}">
+								<f:convertNumber type="number" maxIntegerDigits="3" />
+							</p:inputText>
+						</h:panelGroup>
+
+						<p:commandButton value="Get prestige" ajax="true" actionListener="#{playerBean.storeRankPrestige}" onclick="pbAjax2.start();"
+							rendered="#{request.isUserInRole('ROLE_USER')}" />
+						<p:commandButton value="Get level" ajax="true" actionListener="#{playerBean.storeRankLevel}" onclick="pbAjax2.start();"
+							rendered="#{request.isUserInRole('ROLE_USER')}" />
+						
+					</h:panelGrid>
+					<p:progressBar widgetVar="pbAjax2" ajax="true" interval="1000" value="#{playerBean.progress}" rendered="#{request.isUserInRole('ROLE_USER')}"
+						completeListener="#{playerBean.handleProgressComplete}" onCompleteUpdate="msgs" onCancelUpdate="msgs" />
+					<p:fieldset id="playerCells"
+						legend="#{playerBean.selectedPlayer} : #{playerBean.selectedPlayer.level} alliance=#{playerBean.selectedPlayer.alliance}
+				level=#{playerBean.selectedPlayer.level} prestige=#{playerBean.selectedPlayer.prestige} levelRank=#{playerBean.selectedPlayer.levelRank} prestigeRank=#{playerBean.selectedPlayer.prestigeRank} 
+				">
+						<p:dataList value="#{playerBean.cells}" var="cell" itemType="square">
+						#{cell.x}:#{cell.y} #{cell.name} (#{cell.level}) - 
+						last Update: <h:outputText value="#{cell.lastUpdate}" ><f:convertDateTime pattern="dd.MM.yyyy HH:mm" /></h:outputText>
+ 
+						</p:dataList>
+					</p:fieldset>
+
+				</p:tab>
+				<p:tab title="Alliance">
+					<h:panelGrid columns="3">
+						<p:autoComplete value="#{playerBean.selectedAlliance}" minQueryLength="2" queryDelay="500" completeMethod="#{playerBean.autocompleteAlliance}"
+							var="alliance" itemLabel="#{alliance}" itemValue="#{alliance}" />
+						<p:commandButton value="Alliance info" update="alliancePlayers" />
+						<p:commandButton value="Scout" ajax="true" update="scoutResult" actionListener="#{homeBean.scoutAlliance}" onclick="tabView.select(3);pbAjax3.start();poller3.start()"
+							rendered="#{request.isUserInRole('ROLE_USER')}" />
+					</h:panelGrid>
+					<p:fieldset id="alliancePlayers" legend="#{playerBean.selectedAlliance}">
+						<h:dataTable value="#{playerBean.playersInAlliance}" var="player">
+							<h:column>
+								<p:fieldset legend="#{player.name}">
+									<table>
+										<tr>
+											<td><h:outputText value="level=#{player.level}" /></td>
+											<td rowspan="4"><p:dataList value="#{playerBean.getPlayerCells(player)}" var="cell" itemType="square">#{cell.x}:#{cell.y} #{cell.name} (#{cell.level})</p:dataList>
+											</td>
+										</tr>
+										<tr>
+											<td><h:outputText value="levelRank=#{player.levelRank}" /></td>
+										</tr>
+										<tr>
+											<td><h:outputText value="prestige=#{player.prestige}" /></td>
+										</tr>
+										<tr>
+											<td><h:outputText value="prestigeRank=#{player.prestigeRank}" /></td>
+										</tr>
+									</table>
+								</p:fieldset>
+							</h:column>
+						</h:dataTable>
+					</p:fieldset>
+				</p:tab>
+				<p:tab title="Scout">
+					<h:panelGrid columns="4" columnClasses="leftAlign, leftAlign, rightAlign, leftAlign">
+						<h:outputLabel for="inputx3">X:</h:outputLabel>
+						<p:inputText id="inputx3" value="#{homeBean.scoutx}">
+							<f:convertNumber type="number" maxIntegerDigits="3" />
+						</p:inputText>
+
+						<h:outputLabel for="inputy3" styleClass="text-align:right">Y:</h:outputLabel>
+						<p:inputText id="inputy3" value="#{homeBean.scouty}">
+							<f:convertNumber type="number" maxIntegerDigits="3" />
+						</p:inputText>
+
+						<h:outputLabel for="radius3">Radius:</h:outputLabel>
+						<p:inputText id="radius3" value="#{homeBean.scoutr}">
+							<f:convertNumber type="number" maxIntegerDigits="3" />
+						</p:inputText>
+						<h:selectBooleanCheckbox id="troopsOnly" value="#{homeBean.troopsOnly}" />
+						<h:outputLabel for="troopsOnly">Only cells with troops</h:outputLabel>
+						<h:outputLabel for="playerLevel">Min player level:</h:outputLabel>
+						<p:inputText id="playerLevel" value="#{homeBean.minPlayerLevel}">
+							<f:convertNumber type="number" maxIntegerDigits="2" maxFractionDigits="0" />
+						</p:inputText>
+
+						<h:selectBooleanCheckbox id="scoutOasis" value="#{homeBean.scoutOasis}" />
+						<h:outputLabel for="scoutOasis">Scout oasis and forts</h:outputLabel>
+					</h:panelGrid>
+
+					<p:commandButton value="Scout" ajax="true" update="scoutResult" actionListener="#{homeBean.scout}" onclick="pbAjax3.start();poller3.start()"
+						rendered="#{request.isUserInRole('ROLE_USER')}" />
+
+					<p:progressBar widgetVar="pbAjax3" ajax="true" interval="1000" value="#{homeBean.scoutProgress}" oncomplete="poller3.stop()"
+						onCompleteUpdate="msgs" completeListener="#{homeBean.handleProgressComplete}" rendered="#{request.isUserInRole('ROLE_USER')}" />
+
+
+
+					<p:poll autoStart="false" widgetVar="poller3" interval="3" listener="#{homeBean.getScoutResult}" update="scoutResult" />
+				</p:tab>
+			</p:tabView>
+			<p:outputPanel id="map">
+				<div>
+					<table border="0" cellpadding="0" cellspacing="0">
+						<ui:repeat var="row" value="#{homeBean.mapRows}">
+							<tr>
+								<ui:repeat var="cell" value="#{homeBean.getMapRowCells(row)}">
+									<td align="center" valign="middle" title="#{cell}">
+										<div onclick="alert('#{cell}')"
+											class="cellType#{cell.type} #{cell.level gt 8?'':'cellTransparent'} haypiMap #{cell.alliance == null and cell.type != 1 and cell.type != 2 ? '' : (cell.alliance == 'TabulaRasa' ? 'Allied' : 'Enemy')}">
+											#{(cell.level &gt; 0) ? cell.level : null}</div></td>
+								</ui:repeat>
+							</tr>
+						</ui:repeat>
+					</table>
+				</div>
+			</p:outputPanel>
+			<h:dataTable id="scoutResult" value="#{homeBean.scoutResult}" var="scoutInfo">
+				<h:column>
+					<p:fieldset legend="#{scoutInfo.x}:#{scoutInfo.y} #{scoutInfo.cell.owner} (#{scoutInfo.cell.typeName}) | Value [#{scoutInfo.prestigeValueStr}] | Distance #{scoutInfo.cell.getDistance(homeBean.scoutx, homeBean.scouty)} ">
+						<div class="#{scoutInfo.important?'Enemy':scoutInfo.farm?'Farm':''}">
+							<ui:repeat var="line" value="#{scoutInfo.htmlLines}">
+								#{line}<br />
+							</ui:repeat>
+						</div>
+					</p:fieldset>
+				</h:column>
+			</h:dataTable>
+		</h:form>
+	</ui:define>
+</ui:composition>
